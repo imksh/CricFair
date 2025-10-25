@@ -1,10 +1,9 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView,ToastAndroid } from "react-native";
 import { useState, useEffect } from "react";
 import useThemeStore from "../store/themeStore";
 import { useScoreStore } from "../store/scoreStore";
 import { Heading, Mid, Body, Regular } from "./Typography";
 import Keyboard from "./Keyboard";
-import ScoringHeader from "./ScoringHeader";
 import { useRouter } from "expo-router";
 
 export default function Scoring() {
@@ -33,7 +32,6 @@ export default function Scoring() {
     setIsStriker,
   } = useScoreStore();
   const { colors } = useThemeStore();
-  const [crr, setCrr] = useState(0);
   const [eco, setEco] = useState(0);
   const [player1sr, setPlayer1sr] = useState(0);
   const [player2sr, setPlayer2sr] = useState(0);
@@ -42,12 +40,12 @@ export default function Scoring() {
   const team = inning === 1 ? team1 : team2;
 
   useEffect(() => {
-    setCrr(getRunRate(inning === 1 ? team1 : team2));
     setPlayer2sr(getStrikeRate(batsman2));
     setPlayer1sr(getStrikeRate(batsman1));
     setEco(getEconomy(bowler));
-  }, [team1.runs, team2.runs, ball, batsman1, batsman2, bowler]);
+  }, [team1.runs, team2.runs, ball, batsman1, batsman2]);
 
+  
   useEffect(() => {
     setPlayer1(batsman1);
     setPlayer2(batsman2);
@@ -219,17 +217,17 @@ export default function Scoring() {
               },
             })
           }
-          disabled={bowler.name!=="" }
+          disabled={bowler?.name!=="" }
         >
           <TouchableOpacity className="w-[30%]">
-            <Body className="text-center">{bowler.name || "-"}</Body>
+            <Body className="text-center">{bowler?.name || "-"}</Body>
           </TouchableOpacity>
           <Body className="w-[14%] text-center">
-            {bowler.over}.{bowler.ball}
+            {bowler?.over}.{bowler?.ball}
           </Body>
-          <Body className="w-[14%] text-center">{bowler.maiden}</Body>
-          <Body className="w-[14%] text-center">{bowler.run}</Body>
-          <Body className="w-[14%] text-center">{bowler.wicket}</Body>
+          <Body className="w-[14%] text-center">{bowler?.maiden}</Body>
+          <Body className="w-[14%] text-center">{bowler?.run}</Body>
+          <Body className="w-[14%] text-center">{bowler?.wicket}</Body>
           <Body className="w-[14%] text-center">{eco || 0}</Body>
         </TouchableOpacity>
       </View>

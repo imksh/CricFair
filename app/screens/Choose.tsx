@@ -80,7 +80,7 @@ export default function Choose() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 className="my-2 py-8 px-8"
-                style={bowler.id==item.id?{borderColor:colors.primary,borderWidth:1}:{
+                style={bowler?.id===item.id?{borderColor:colors.primary,borderWidth:1}:{
                   borderRadius: 20,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },

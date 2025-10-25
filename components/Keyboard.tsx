@@ -1,13 +1,13 @@
-import { View, Text, TouchableOpacity,TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput,ToastAndroid } from "react-native";
 import { useState, useEffect } from "react";
 import useThemeStore from "../store/themeStore";
 import { useScoreStore } from "../store/scoreStore";
 import { Heading, Mid, Body, Regular } from "./Typography";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import ConfirmationToast from "./ConfirmationToast";
 import { Portal } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
+import { api } from "../utils/axios";
 
 export default function Keyboard() {
   const router = useRouter();
@@ -28,6 +28,8 @@ export default function Keyboard() {
     bowler,
     setIsStriker,
     addBowler,
+    ball,
+    over,
     setIsOverCompleted,
     totalOvers,
     setInning,
@@ -36,22 +38,75 @@ export default function Keyboard() {
   } = useScoreStore();
   const [show, setShow] = useState("");
   const [out, setOut] = useState("");
+  const [whichRun, setWhichRun] = useState("");
   const [whoout, setWhoout] = useState("striker");
   const [select, setSelect] = useState(false);
   const [showStriker, setShowStriker] = useState(false);
   const team = inning === 1 ? team1 : team2;
   useEffect(() => {
+    
     if (
       isOverCompleted ||
       batsman1?.name === "" ||
-      batsman2.name === "" ||
-      bowler.name === ""
+      batsman2?.name === "" ||
+      bowler?.name === ""
     ) {
       setSelect(true);
     } else {
       setSelect(false);
     }
-  }, [team.ball, team.run, batsman1, batsman2, bowler]);
+  }, [team.ball, team.run, batsman1, batsman2]);
+
+  useEffect(() => {
+    const addScore = async () => {
+      try {
+        const data = {
+          batsman1,
+          batsman2,
+          team1: team1.name,
+          team2: team2.name,
+          score: `${team.runs}-${team.wicket}`,
+          over: `${team.over}.${team.ball}`,
+          runRate: calculateRunRate(team.runs,team.over,team.ball),
+          isFour: whichRun === "four",
+          isSix: whichRun === "six",
+          isOut: whichRun === "out",
+          bowler,
+        };
+        await api.post("/overlay/add-score", data);
+      } catch (error) {
+        console.log("Error in adding score to overlay: ", error);
+        ToastAndroid.show(`Error: ${error}`, ToastAndroid.SHORT);
+      }
+    };
+    addScore();
+  }, [
+    team.runs,
+    team.wicket,
+    ball,
+    over,
+    batsman1.name,
+    batsman2.name,
+    bowler.name,
+    whichRun,
+  ]);
+
+  const calculateRunRate = (runs, overs, balls) => {
+  // Convert total balls bowled
+  const totalBalls = overs * 6 + balls;
+
+  // Avoid division by zero
+  if (totalBalls === 0) return 0;
+
+  // Convert back to overs (as decimal)
+  const oversDecimal = totalBalls / 6;
+
+  // Calculate run rate
+  const runRate = runs / oversDecimal;
+
+  // Return rounded to 2 decimals
+  return parseFloat(runRate.toFixed(2));
+};
 
   if (inning > 2) {
     return (
@@ -246,6 +301,8 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("bowled", "striker", 0);
               setShow("");
+              setWhichRun("out");
+              
             }}
           >
             <Mid
@@ -260,6 +317,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("caught", "striker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -274,6 +332,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("stumped", "striker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -288,6 +347,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("lbw", "striker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -315,6 +375,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("mankad", "nonStriker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -329,6 +390,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("retired", "striker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -343,6 +405,7 @@ export default function Keyboard() {
             onPress={() => {
               addWicket("hitWicket", "striker", 0);
               setShow("");
+              setWhichRun("out");
             }}
           >
             <Mid
@@ -377,16 +440,24 @@ export default function Keyboard() {
                 <TouchableOpacity
                   onPress={() => setWhoout("striker")}
                   className="border p-2 my-4"
-                  style={whoout==="striker"?{borderColor:colors.primary}:{borderColor:colors.border}}
+                  style={
+                    whoout === "striker"
+                      ? { borderColor: colors.primary }
+                      : { borderColor: colors.border }
+                  }
                 >
-                  <Mid style={{textAlign:"center"}}>{batsman1.name}</Mid>
+                  <Mid style={{ textAlign: "center" }}>{batsman1.name}</Mid>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setWhoout("nonStriker")}
                   className="border p-2 my-4"
-                  style={whoout==="nonStriker"?{borderColor:colors.primary}:{borderColor:colors.border}}
+                  style={
+                    whoout === "nonStriker"
+                      ? { borderColor: colors.primary }
+                      : { borderColor: colors.border }
+                  }
                 >
-                  <Mid style={{textAlign:"center"}}>{batsman2.name}</Mid>
+                  <Mid style={{ textAlign: "center" }}>{batsman2.name}</Mid>
                 </TouchableOpacity>
                 <TextInput
                   placeholderTextColor={colors.text}
@@ -406,11 +477,12 @@ export default function Keyboard() {
                   className="w-[80%] mx-auto text-center"
                 />
                 <TouchableOpacity
-                className="py-3 mt-4 mb-4 rounded-2xl items-center mx-auto p-4"
-                style={{ backgroundColor: colors.primary }}
+                  className="py-3 mt-4 mb-4 rounded-2xl items-center mx-auto p-4"
+                  style={{ backgroundColor: colors.primary }}
                   onPress={() => {
                     addWicket("runout", whoout, parseInt(runComplete));
                     setShow("");
+                    setWhichRun("out");
                   }}
                 >
                   <Mid style={{ color: "#fff" }}>Submit</Mid>
@@ -1270,16 +1342,16 @@ export default function Keyboard() {
                 <TouchableOpacity
                   onPress={() => setIsStriker(batsman1)}
                   className="border p-2 my-4"
-                  style={{borderColor:colors.border}}
+                  style={{ borderColor: colors.border }}
                 >
-                  <Mid style={{textAlign:"center"}}>{batsman1.name}</Mid>
+                  <Mid style={{ textAlign: "center" }}>{batsman1.name}</Mid>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setIsStriker(batsman2)}
                   className="borderp-2 my-4"
-                  style={{borderColor:colors.border}}
+                  style={{ borderColor: colors.border }}
                 >
-                  <Mid style={{textAlign:"center"}}>{batsman2.name}</Mid>
+                  <Mid style={{ textAlign: "center" }}>{batsman2.name}</Mid>
                 </TouchableOpacity>
               </LinearGradient>
             </View>
@@ -1320,7 +1392,13 @@ export default function Keyboard() {
               3
             </Mid>
           </TouchableOpacity>
-          <TouchableOpacity className="w-[20%]" onPress={() => addRun(4)}>
+          <TouchableOpacity
+            className="w-[20%]"
+            onPress={() => {
+              addRun(4);
+              setWhichRun("four");
+            }}
+          >
             <Mid
               className="text-center border-r border-b py-6"
               style={{ color: "#fff" }}
@@ -1328,7 +1406,13 @@ export default function Keyboard() {
               4
             </Mid>
           </TouchableOpacity>
-          <TouchableOpacity className="w-[20%]" onPress={() => addRun(6)}>
+          <TouchableOpacity
+            className="w-[20%]"
+            onPress={() => {
+              addRun(6);
+              setWhichRun("six");
+            }}
+          >
             <Mid
               className="text-center border-b py-6"
               style={{ color: "#fff" }}
