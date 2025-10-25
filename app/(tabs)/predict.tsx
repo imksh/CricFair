@@ -21,10 +21,14 @@ import { save, get, remove } from "../../utils/storage.ts";
 import ConfirmationToast from "../../components/ConfirmationToast";
 import useLocalStore from "../../store/localStore";
 import CustomImage from "../../components/CustomImage";
-import { useRouter } from "expo-router";
+import { useRouter } from 'expo-router';
 
-const index = () => {
+const predict = () => {
   const router = useRouter();
+  // useEffect(() => {
+  //   router.push("screens/ScoringScreen")
+  // }, [])
+  
   const { colors, statusBarStyle } = useThemeStore();
   const {
     players,
@@ -72,7 +76,6 @@ const index = () => {
         last2: false,
         battingQueuePosition: null,
         bowlingQueuePosition: null,
-        match:[],
         createdAt: Date.now(),
       };
       const updatedPlayers = [...players, newPlayer];
@@ -172,7 +175,7 @@ const index = () => {
   const batPriority = () => {
     const updatedPlayers = players.map((p) => ({
       ...p,
-      didntBat: p.isSelected ? true : p.didntBat, 
+      didntBat: p.isSelected ? true : p.didntBat, // only mark selected players
     }));
     setPlayers(updatedPlayers);
 
@@ -216,13 +219,67 @@ const index = () => {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <AddPlayer
-            inputPlayer={inputPlayer}
-            setInputPlayer={setInputPlayer}
-            setShowAdd={setShowAdd}
-            onAdd={handleAdd}
+          <Predict
+            todayBatsman={todayBatsman}
+            todayBowler={todayBowlers}
+            predict={predictData}
           />
-          <Search input={input} setInput={setInput} />
+          {!showAdd ? (
+            <View className="flex-row flex-wrap justify-around w-[94%] mx-auto">
+              <TouchableOpacity
+                className="py-3 mt-8 rounded-2xl w-[40%] items-center"
+                style={{ backgroundColor: colors.primary }}
+                onPress={() => setShowAdd(true)}
+              >
+                <Mid style={{ color: "#fff" }}>Add New</Mid>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="py-3 w-[40%] items-center mt-8 rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
+                onPress={() => setShowAttendanceConfirm(true)}
+              >
+                <Mid style={{ color: "#fff" }}>Attendance</Mid>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="py-3 w-[40%] items-center mt-8 rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
+                onPress={() => setShowBatConfirm(true)}
+              >
+                <Mid style={{ color: "#fff" }}>Bat ⚡️</Mid>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="py-3 w-[40%] items-center mt-8 rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
+                onPress={() => setShowBowlConfirm(true)}
+              >
+                <Mid style={{ color: "#fff" }}>Bowl ⚡️</Mid>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="py-3 w-[40%] items-center mt-8 rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
+                onPress={clearSelection}
+              >
+                <Mid style={{ color: "#fff" }}>Clear</Mid>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className=" py-3 w-[40%] items-center mt-8 rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
+              >
+                <Mid style={{ color: "#fff" }}>Sync</Mid>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <AddPlayer
+              inputPlayer={inputPlayer}
+              setInputPlayer={setInputPlayer}
+              setShowAdd={setShowAdd}
+              onAdd={handleAdd}
+            />
+          )}
+          <Search input={input} setInput={setInput} onAdd={handleAdd} />
           <View className="w-[92%] mx-auto">
             {players
               .filter((i) =>
@@ -269,4 +326,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default predict;

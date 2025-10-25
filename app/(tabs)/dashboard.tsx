@@ -147,7 +147,7 @@ export default function Dashboard() {
               {batsmanQueue?.length === 0 ? (
                 <Regular className="mt-2">Empty List</Regular>
               ) : (
-                batsmanQueue?.map((p) => <Regular key={p.id}>{p.name}</Regular>)
+                batsmanQueue?.map((p,indx) => <Regular key={indx}>{p.name}</Regular>)
               )}
             </View>
             <View>
@@ -155,7 +155,7 @@ export default function Dashboard() {
               {bowlerQueue?.length === 0 ? (
                 <Regular className="mt-2">Empty List</Regular>
               ) : (
-                bowlerQueue?.map((p) => <Regular key={p.id}>{p.name}</Regular>)
+                bowlerQueue?.map((p,indx) => <Regular key={indx}>{p.name}</Regular>)
               )}
             </View>
           </View>

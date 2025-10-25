@@ -35,12 +35,26 @@ const {colors} = useThemeStore();
         
       />
       <Tabs.Screen
+        name="predict"
+        options={{
+          title: "Predict",
+          tabBarIcon: ({ color, size }) => <Ionicons name="tennisball-outline" size={size} color={color}/>,
+        }}
+        
+      />
+        <Tabs.Screen
+          name="score"
+          options={{
+            title: "Score",
+            tabBarIcon: ({ color, size }) => <Ionicons name="add"  size={size} color={color} style={{transform:[{scale:1.5}]}}/>,
+          }}
+        />
+      <Tabs.Screen
         name="dashboard"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size }) => <Ionicons name="apps-outline"  size={size} color={color}/>,
         }}
-        
       />
       <Tabs.Screen
         name="settings"
@@ -48,7 +62,6 @@ const {colors} = useThemeStore();
           title: "Settings",
           tabBarIcon: ({ color, size }) => <Ionicons name="settings"  size={size} color={color}/>,
         }}
-        
       />
     </Tabs>
   );

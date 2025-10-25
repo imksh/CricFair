@@ -71,6 +71,14 @@ const settings = () => {
     updateData();
   };
 
+  const clearMatches = async () => {
+  try {
+    await remove("matchHistory");
+  } catch (err) {
+    console.error("Error clearing matches:", err);
+  }
+};
+
   const shareApp = async () => {
   try {
     const result = await Share.share({
@@ -221,6 +229,12 @@ const settings = () => {
               name="Clear App Data"
               icon={"trash-outline"}
               message="This wil clear the App Data permanently. This action cannot be undone."
+            />
+            <SettingsOptins
+              fun={clearMatches}
+              name="Delete Matches"
+              icon={"trash-bin-outline"}
+              message="This wil clear the Matches History permanently. This action cannot be undone."
             />
           </View>
         </LinearGradient>

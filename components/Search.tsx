@@ -1,10 +1,10 @@
-import { View, TextInput,TouchableOpacity } from "react-native";
+import { View, TextInput,TouchableOpacity,keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useThemeStore from "../store/themeStore";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 
-const Search = ({onAdd, input, setInput}) => {
+const Search = ({ input, setInput}) => {
   const { colors } = useThemeStore();
   return (
     <View className="flex-row items-center justify-between w-[85%] mx-auto mt-8 pb-4">
@@ -30,7 +30,7 @@ const Search = ({onAdd, input, setInput}) => {
         className="p-2 rounded-2xl ml-4"
         style={{ backgroundColor: input?.trim() ? colors.primary : colors.border }}
         disabled={!input?.trim()}
-        onPress={onAdd}
+        onPress={() => keyboard?.dissmiss()}
       >
         <Ionicons name="search-outline" size={25} color="#fff" />
       </TouchableOpacity>

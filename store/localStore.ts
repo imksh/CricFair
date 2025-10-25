@@ -70,9 +70,9 @@ const useLocalStore = create((set, get) => ({
     const today = new Date().toISOString().split("T")[0];
     const selectedToday =
       attendance[today] || players.filter((p) => p.isSelected);
-
     if (!selectedToday.length) return;
 
+    // Split by role
     const todayBat = selectedToday.filter(
       (p) => p.role === "Batsman" || p.role === "All-Rounder"
     );
@@ -80,27 +80,59 @@ const useLocalStore = create((set, get) => ({
       (p) => p.role === "Bowler" || p.role === "All-Rounder"
     );
 
-    // Merge with existing queues (avoid duplicates)
-    const updatedBatsmanQueue = Array.from(
-      new Map([...batsmanQueue, ...todayBat].map((p) => [p.id, p])).values()
+    // --- PRIORITY: players who played last match ---
+    const lastBatsmenIds = new Set(
+      (lastdayPlayers?.batsmanList || []).map((p) => p.id)
     );
-    const updatedBowlerQueue = Array.from(
-      new Map([...bowlerQueue, ...todayBall].map((p) => [p.id, p])).values()
+    const lastBowlersIds = new Set(
+      (lastdayPlayers?.bowlerList || []).map((p) => p.id)
     );
 
-    // Pick top 4 from each queue
-    const openingBatsmen = updatedBatsmanQueue.splice(0, 4);
-    const bowlers = updatedBowlerQueue.splice(0, 4);
+    // Players who played last match & are present today
+    const returningBatsmen = todayBat.filter((p) => lastBatsmenIds.has(p.id));
+    const returningBowlers = todayBall.filter((p) => lastBowlersIds.has(p.id));
+
+    // Fill remaining if less than 4
+    const finalBatsmen = [
+      ...returningBatsmen,
+      ...todayBat.filter((p) => !lastBatsmenIds.has(p.id)),
+    ].slice(0, 4);
+
+    const finalBowlers = [
+      ...returningBowlers,
+      ...todayBall.filter((p) => !lastBowlersIds.has(p.id)),
+    ].slice(0, 4);
+
+    // Remove today's selected players from existing queues
+    const remainingBatsmanQueue = batsmanQueue.filter(
+      (p) => !finalBatsmen.some((f) => f.id === p.id)
+    );
+
+    const remainingBowlerQueue = bowlerQueue.filter(
+      (p) => !finalBowlers.some((f) => f.id === p.id)
+    );
+
+    // Merge remaining queue with today's final selection (avoid duplicates)
+    const updatedBatsmanQueue = Array.from(
+      new Map(
+        [...remainingBatsmanQueue, ...finalBatsmen].map((p) => [p.id, p])
+      ).values()
+    );
+
+    const updatedBowlerQueue = Array.from(
+      new Map(
+        [...remainingBowlerQueue, ...finalBowlers].map((p) => [p.id, p])
+      ).values()
+    );
 
     // Update state
     set({
       batsmanQueue: updatedBatsmanQueue,
       bowlerQueue: updatedBowlerQueue,
-      todayBatsman: openingBatsmen,
-      todayBowlers: bowlers,
+      todayBatsman: finalBatsmen,
+      todayBowlers: finalBowlers,
     });
 
-    // Optionally save immediately
     get().updateData();
   },
 
@@ -164,18 +196,18 @@ const useLocalStore = create((set, get) => ({
     get().updateData();
   },
 
-  clearAll: () =>{
-    set({players:[]});
-    set({attendance:{}});
-    set({batsmanQueue:[]});
-    set({bowlerQueue:[]});
-    set({lastdayPlayers:[]});
-    set({todayPlayers:[]});
-    set({todayBatsman:[]});
-    set({todayBowlers:[]});
-    set({date:""});
+  clearAll: () => {
+    set({ players: [] });
+    set({ attendance: {} });
+    set({ batsmanQueue: [] });
+    set({ bowlerQueue: [] });
+    set({ lastdayPlayers: [] });
+    set({ todayPlayers: [] });
+    set({ todayBatsman: [] });
+    set({ todayBowlers: [] });
+    set({ date: "" });
     get().updateData();
-  }
+  },
 }));
 
 export default useLocalStore;
