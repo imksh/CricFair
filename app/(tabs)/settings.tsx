@@ -83,7 +83,7 @@ const settings = () => {
   try {
     const result = await Share.share({
       message:
-        "Check out this awesome Cricket Management app! Download it here: https://example.com", 
+        "Check out this awesome Cricket Management app! Download it here: https://drive.google.com/drive/folders/1tNqfwN3Plb7wbqBZCrl7i03sOCfx1p4Z?usp=sharing", 
     });
 
     if (result.action === Share.sharedAction) {

@@ -30,6 +30,7 @@ export default function Scoring() {
     addBowler,
     addBatsman,
     setIsStriker,
+    setBowler,
   } = useScoreStore();
   const { colors } = useThemeStore();
   const [eco, setEco] = useState(0);
@@ -37,19 +38,22 @@ export default function Scoring() {
   const [player2sr, setPlayer2sr] = useState(0);
   const [player1, setPlayer1] = useState(batsman1);
   const [player2, setPlayer2] = useState(batsman2);
+  const [player3, setPlayer3] = useState(bowler);
   const team = inning === 1 ? team1 : team2;
 
   useEffect(() => {
+    setEco(getEconomy(bowler));
     setPlayer2sr(getStrikeRate(batsman2));
     setPlayer1sr(getStrikeRate(batsman1));
-    setEco(getEconomy(bowler));
+    // setEco(getEconomy(bowler));
   }, [team1.runs, team2.runs, ball, batsman1, batsman2]);
 
   
   useEffect(() => {
     setPlayer1(batsman1);
     setPlayer2(batsman2);
-  }, [batsman1, batsman2]);
+    setPlayer3(bowler)
+  }, [batsman1, batsman2,bowler]);
 
   useEffect(() => {
     const currentTeam = inning === 1 ? team1 : team2;
@@ -67,7 +71,7 @@ export default function Scoring() {
     if (bowler?.id && !existingBowler) {
       addBowler(bowler);
     }
-  }, [batsman1?.id, batsman2?.id, bowler?.id, inning]);
+  }, [batsman1?.id, batsman2?.id,bowler?.id, inning]);
 
   const calculateRunRate = (runs, overs, balls) => {
   // Convert total balls bowled
@@ -217,17 +221,17 @@ export default function Scoring() {
               },
             })
           }
-          disabled={bowler?.name!=="" }
+          disabled={player3?.name!=="" }
         >
           <TouchableOpacity className="w-[30%]">
-            <Body className="text-center">{bowler?.name || "-"}</Body>
+            <Body className="text-center">{player3?.name || "-"}</Body>
           </TouchableOpacity>
           <Body className="w-[14%] text-center">
-            {bowler?.over}.{bowler?.ball}
+            {player3?.over}.{player3?.ball}
           </Body>
-          <Body className="w-[14%] text-center">{bowler?.maiden}</Body>
-          <Body className="w-[14%] text-center">{bowler?.run}</Body>
-          <Body className="w-[14%] text-center">{bowler?.wicket}</Body>
+          <Body className="w-[14%] text-center">{player3?.maiden}</Body>
+          <Body className="w-[14%] text-center">{player3?.run}</Body>
+          <Body className="w-[14%] text-center">{player3?.wicket}</Body>
           <Body className="w-[14%] text-center">{eco || 0}</Body>
         </TouchableOpacity>
       </View>

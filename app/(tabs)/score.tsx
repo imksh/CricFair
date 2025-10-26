@@ -17,7 +17,6 @@ import { Mid, Heading, Regular, Body } from "../../components/Typography";
 import Toss from "../../components/Toss";
 import { Ionicons } from "@expo/vector-icons";
 import { useScoreStore } from "../../store/scoreStore";
-import useLocalStore from "../../store/localStore";
 import ShowCurrentScore from "../../components/ShowCurrentScore";
 import { getData, save } from "../../utils/storage.ts";
 import { Portal } from "react-native-paper";
@@ -35,9 +34,7 @@ export default function score() {
     resetScore,
     team1,
     team2,
-    batsman1,
-    batsman2,
-    bowler,
+    loadLiveMatchData,
   } = useScoreStore();
   const [matches, setMatches] = useState([]);
   const [match, setMatch] = useState({
@@ -51,6 +48,10 @@ export default function score() {
   });
   const [show, setShow] = useState(false);
   const [showToss, setShowToss] = useState(false);
+
+  useEffect(() => {
+    loadLiveMatchData();
+  }, []);
 
   useEffect(() => {
     setMatch({

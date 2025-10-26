@@ -7,7 +7,6 @@ const useLocalStore = create((set, get) => ({
   attendance: {},
   batsmanQueue: [],
   bowlerQueue: [],
-  lastdayPlayers: [],
   todayPlayers: [],
   todayBatsman: [],
   todayBowlers: [],
@@ -21,7 +20,6 @@ const useLocalStore = create((set, get) => ({
         attendance: (await getData("attendance")) || {},
         batsmanQueue: (await getData("batsmanQueue")) || [],
         bowlerQueue: (await getData("bowlerQueue")) || [],
-        lastdayPlayers: (await getData("lastdayPlayers")) || [],
         todayPlayers: (await getData("todayPlayers")) || [],
         todayBatsman: (await getData("todayBatsman")) || [],
         todayBowlers: (await getData("todayBowlers")) || [],
@@ -40,7 +38,6 @@ const useLocalStore = create((set, get) => ({
       await save("attendance", state.attendance);
       await save("batsmanQueue", state.batsmanQueue);
       await save("bowlerQueue", state.bowlerQueue);
-      await save("lastdayPlayers", state.lastdayPlayers);
       await save("todayPlayers", state.todayPlayers);
       await save("todayBatsman", state.todayBatsman);
       await save("todayBowlers", state.todayBowlers);
@@ -55,7 +52,6 @@ const useLocalStore = create((set, get) => ({
   setAttendance: (attendance) => set({ attendance }),
   setBatsmanQueue: (batsmanQueue) => set({ batsmanQueue }),
   setBowlerQueue: (bowlerQueue) => set({ bowlerQueue }),
-  setLastdayPlayers: (lastdayPlayers) => set({ lastdayPlayers }),
   setTodayPlayers: (todayPlayers) => set({ todayPlayers }),
   setTodayBatsman: (todayBatsman) => set({ todayBatsman }),
   setTodayBowlers: (todayBowlers) => set({ todayBowlers }),
@@ -63,78 +59,60 @@ const useLocalStore = create((set, get) => ({
 
   // Prediction logic
   predict: () => {
-    const state = get();
-    const { players, attendance, batsmanQueue, bowlerQueue, lastdayPlayers } =
-      state;
+  const state = get();
+  const { players, attendance, batsmanQueue, bowlerQueue } = state;
 
-    const today = new Date().toISOString().split("T")[0];
-    const selectedToday =
-      attendance[today] || players.filter((p) => p.isSelected);
-    if (!selectedToday.length) return;
+  const today = new Date().toISOString().split("T")[0];
+  const day = new Date();
+  day.setDate(day.getDate() - 1);
+  const yesterday = day.toISOString().split("T")[0];
 
-    // Split by role
-    const todayBat = selectedToday.filter(
-      (p) => p.role === "Batsman" || p.role === "All-Rounder"
-    );
-    const todayBall = selectedToday.filter(
-      (p) => p.role === "Bowler" || p.role === "All-Rounder"
-    );
+  const selectedToday = attendance[today] || players.filter((p) => p.isSelected);
+  if (!selectedToday.length) return;
 
-    // --- PRIORITY: players who played last match ---
-    const lastBatsmenIds = new Set(
-      (lastdayPlayers?.batsmanList || []).map((p) => p.id)
-    );
-    const lastBowlersIds = new Set(
-      (lastdayPlayers?.bowlerList || []).map((p) => p.id)
-    );
+  const todayBat = selectedToday.filter(
+    (p) => p.role === "Batsman" || p.role === "All-Rounder"
+  );
+  const todayBall = selectedToday.filter(
+    (p) => p.role === "Bowler" || p.role === "All-Rounder"
+  );
 
-    // Players who played last match & are present today
-    const returningBatsmen = todayBat.filter((p) => lastBatsmenIds.has(p.id));
-    const returningBowlers = todayBall.filter((p) => lastBowlersIds.has(p.id));
+  // Filter only attendees
+  const filterQueue = (queue, todayPlayers) =>
+    queue.filter((p) => todayPlayers.some((t) => t.id === p.id));
 
-    // Fill remaining if less than 4
-    const finalBatsmen = [
-      ...returningBatsmen,
-      ...todayBat.filter((p) => !lastBatsmenIds.has(p.id)),
-    ].slice(0, 4);
+  // Rotate queue to put first 4 as today’s players
+  const pickToday = (queue, todayPlayers) => {
+    const filteredQueue = filterQueue(queue, todayPlayers);
+    const top4 = filteredQueue.slice(0, 4);
+    const rest = queue.filter((p) => !top4.some((t) => t.id === p.id));
+    return { top4, newQueue: [...rest, ...top4] }; // rotate
+  };
 
-    const finalBowlers = [
-      ...returningBowlers,
-      ...todayBall.filter((p) => !lastBowlersIds.has(p.id)),
-    ].slice(0, 4);
+  const { top4: finalBatsmen, newQueue: updatedBatsmanQueue } = pickToday(
+    [...batsmanQueue, ...todayBat.filter((p) => !batsmanQueue.map((b) => b.id).includes(p.id))],
+    todayBat
+  );
 
-    // Remove today's selected players from existing queues
-    const remainingBatsmanQueue = batsmanQueue.filter(
-      (p) => !finalBatsmen.some((f) => f.id === p.id)
-    );
+  const { top4: finalBowlers, newQueue: updatedBowlerQueue } = pickToday(
+    [...bowlerQueue, ...todayBall.filter((p) => !bowlerQueue.map((b) => b.id).includes(p.id))],
+    todayBall
+  );
 
-    const remainingBowlerQueue = bowlerQueue.filter(
-      (p) => !finalBowlers.some((f) => f.id === p.id)
-    );
+  console.log("Attendance: ", selectedToday.map((b) => b.name));
+  console.log("Batsman Queue: ", updatedBatsmanQueue.map((b) => b.name));
+  console.log("Today Batsmen: ", finalBatsmen.map((b) => b.name));
+  console.log("Today Bowlers: ", finalBowlers.map((b) => b.name));
 
-    // Merge remaining queue with today's final selection (avoid duplicates)
-    const updatedBatsmanQueue = Array.from(
-      new Map(
-        [...remainingBatsmanQueue, ...finalBatsmen].map((p) => [p.id, p])
-      ).values()
-    );
+  set({
+    batsmanQueue: updatedBatsmanQueue,
+    bowlerQueue: updatedBowlerQueue,
+    todayBatsman: finalBatsmen,
+    todayBowlers: finalBowlers,
+  });
 
-    const updatedBowlerQueue = Array.from(
-      new Map(
-        [...remainingBowlerQueue, ...finalBowlers].map((p) => [p.id, p])
-      ).values()
-    );
-
-    // Update state
-    set({
-      batsmanQueue: updatedBatsmanQueue,
-      bowlerQueue: updatedBowlerQueue,
-      todayBatsman: finalBatsmen,
-      todayBowlers: finalBowlers,
-    });
-
-    get().updateData();
-  },
+  get().updateData();
+},
 
   undoPredict: () => {
     const { todayBatsman, todayBowlers, batsmanQueue, bowlerQueue } = get(); // zustand get
@@ -201,7 +179,6 @@ const useLocalStore = create((set, get) => ({
     set({ attendance: {} });
     set({ batsmanQueue: [] });
     set({ bowlerQueue: [] });
-    set({ lastdayPlayers: [] });
     set({ todayPlayers: [] });
     set({ todayBatsman: [] });
     set({ todayBowlers: [] });

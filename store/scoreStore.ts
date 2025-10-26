@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { save, getData, remove } from "../utils/storage";
 import { nanoid } from "nanoid/non-secure";
+import { ToastAndroid } from "react-native";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 const getInitialState = () => ({
   team1: {
@@ -46,7 +48,7 @@ const getInitialState = () => ({
     four: 0,
     six: 0,
     isStriker: false,
-    isOut:false,
+    isOut: false,
     order: 1,
   },
   batsman2: {
@@ -57,10 +59,25 @@ const getInitialState = () => ({
     four: 0,
     six: 0,
     isStriker: false,
-    isOut:false,
+    isOut: false,
     order: 2,
   },
   bowler: { id: "", name: "", over: 0, ball: 0, maiden: 0, run: 0, wicket: 0 },
+  liveData: {
+    batsman1: {},
+    batsman2: {},
+    team1: "",
+    team2: "",
+    score: "",
+    over: "",
+    runRate: 0,
+    isFour: false,
+    isSix: false,
+    isOut: false,
+    showLive: "",
+    inning:"",
+    bowler: {},
+  },
   past: [] as any[],
 });
 
@@ -164,7 +181,6 @@ export const useScoreStore = create((set, get) => ({
       inning: get().inning + 1,
       past: [],
     });
-    
   },
 
   setIsOverCompleted: () => {
@@ -298,23 +314,11 @@ export const useScoreStore = create((set, get) => ({
     }
   },
 
-  setBowler: (id: string, name: string) => {
-    const { inning } = get();
-    const teamKey = inning === 1 ? "team1" : "team2";
-    const currentTeam = get()[teamKey];
-
-    const bowlerList = [...(currentTeam.bowlerList || [])];
-    const existingIndex = bowlerList.findIndex((b) => b.id === id);
-
-    if (existingIndex >= 0) {
-      // Update existing bowler's name only, keep over/ball/run intact
-      bowlerList[existingIndex] = {
-        ...bowlerList[existingIndex],
-        name,
-      };
-    } else {
-      // Add new bowler with initial stats
-      bowlerList.push({
+  setBowler: (id, name) => {
+    try {
+      const { inning, team1, team2 } = get();
+      const currentTeam = inning === 1 ? team1 : team2;
+      const newBowler = {
         id,
         name,
         over: 0,
@@ -322,14 +326,18 @@ export const useScoreStore = create((set, get) => ({
         run: 0,
         wicket: 0,
         maiden: 0,
+      };
+      set({
+        bowler: newBowler,
+        [inning === 1 ? "team1" : "team2"]: {
+          ...currentTeam,
+          bowlerList: [...(currentTeam.bowlerList || []), newBowler],
+        },
       });
+    } catch (error) {
+      console.error("SetBowler crash:", error);
+      ToastAndroid.show(error.message || "Unknown error", ToastAndroid.LONG);
     }
-
-    set({
-      bowler:
-        bowlerList[existingIndex >= 0 ? existingIndex : bowlerList.length - 1],
-      [teamKey]: { ...currentTeam, bowlerList },
-    });
   },
 
   // ---- Actions ----
@@ -620,7 +628,6 @@ export const useScoreStore = create((set, get) => ({
       // Bowler does NOT get wicket
       // Runs that were completed before the wicket still count
       updatedTeam.runs += runsCompleted;
-      
 
       // If runs are odd → strike changes
       const strikeChanged = runsCompleted % 2 !== 0;
@@ -763,6 +770,11 @@ export const useScoreStore = create((set, get) => ({
     });
   },
 
+  // ---Live Match Options ---
+  setLiveData: (liveData) => {
+    set({ liveData });
+  },
+
   // ---- Local storage ----
   persistMatch: async () => {
     const state = get();
@@ -784,7 +796,7 @@ export const useScoreStore = create((set, get) => ({
     const existingHistory = (await getData("matchHistory")) || [];
 
     // Add new match
-    const updatedHistory = [match,...existingHistory];
+    const updatedHistory = [match, ...existingHistory];
 
     // Save updated history
     await save("matchHistory", updatedHistory);
@@ -793,7 +805,6 @@ export const useScoreStore = create((set, get) => ({
     set({ matchHistory: updatedHistory });
 
     get().resetScore();
-    
   },
 
   // Load match history on app start
@@ -803,5 +814,29 @@ export const useScoreStore = create((set, get) => ({
   },
   resetScore: async () => {
     set(getInitialState());
+  },
+
+  // --- Save Live Match Data ---
+  saveLiveMatchData: async () => {
+    try {
+      const state = get();
+      await save("liveMatchData", state);
+    } catch (error) {
+      console.error("Error saving live match data:", error);
+      ToastAndroid.show("Failed to save live data", ToastAndroid.LONG);
+    }
+  },
+
+  // --- Load Saved Live Match Data ---
+  loadLiveMatchData: async () => {
+    try {
+      const savedData = await getData("liveMatchData");
+      if (savedData) {
+        set(savedData);
+      }
+    } catch (error) {
+      console.error("Error loading live match data:", error);
+      ToastAndroid.show("Failed to load live data", ToastAndroid.LONG);
+    }
   },
 }));

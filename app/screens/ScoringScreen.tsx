@@ -7,6 +7,7 @@ import Info from '../../components/Info';
 import Scoring from "../../components/Scoring"
 import Scorecard from '../../components/Scorecard';
 import Balls from '../../components/Balls';
+import ShowLive from '../../components/ShowLive';
 
 export default function ScoringScreen() {
   const { colors, statusBarStyle } = useThemeStore();
@@ -28,6 +29,7 @@ export default function ScoringScreen() {
         {screen === "scorecard" && <Scorecard />}
         {screen === "info" && <Info />}
         {screen === "balls" && <Balls />}
+        {screen === "live" && <ShowLive />}
       </ScrollView>
     </LinearGradient>
   );

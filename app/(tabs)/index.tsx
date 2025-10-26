@@ -25,28 +25,13 @@ import { useRouter } from "expo-router";
 
 const index = () => {
   const router = useRouter();
+  
+  
   const { colors, statusBarStyle } = useThemeStore();
   const {
     players,
-    attendance,
-    batsmanQueue,
-    bowlerQueue,
-    lastdayPlayers,
-    todayPlayers,
-    todayBatsman,
-    todayBowlers,
     setPlayers,
-    setAttendance,
-    setBatsmanQueue,
-    setBowlerQueue,
-    setLastdayPlayers,
-    setTodayPlayers,
-    setTodayBatsman,
-    setTodayBowlers,
     updateData,
-    predict,
-    boostBat,
-    boostBowl,
   } = useLocalStore();
   const [input, setInput] = useState("");
   const [inputPlayer, setInputPlayer] = useState({
@@ -122,46 +107,7 @@ const index = () => {
     }
   };
 
-  const handleAttendance = async () => {
-    try {
-      const selected = players.filter((item) => item.isSelected);
-      const today = new Date().toISOString().split("T")[0];
-
-      // Update attendance
-      const updatedAttendance = {
-        ...attendance,
-        [today]: attendance[today]
-          ? [
-              ...attendance[today],
-              ...selected.filter(
-                (p) => !attendance[today].some((ap) => ap.id === p.id)
-              ),
-            ]
-          : [...selected],
-      };
-      // Update lastMatches for each player
-      const updatedPlayers = players.map((p) => {
-        const playedToday = selected.some((tp) => tp.id === p.id);
-        const lastMatches = [...(p.lastMatches || []), playedToday]; // add today
-        const trimmedLastMatches = lastMatches.slice(-10); // keep only last 10
-
-        return {
-          ...p,
-          lastMatches: trimmedLastMatches,
-        };
-      });
-
-      // Update state
-      setAttendance(updatedAttendance);
-      setTodayPlayers(selected);
-      setPlayers(updatedPlayers);
-      updateData();
-      ToastAndroid.show("Attendance Added", ToastAndroid.SHORT);
-      clearSelection();
-    } catch (error) {
-      console.log("Error updating attendance:", error);
-    }
-  };
+  
 
   const clearSelection = () => {
     const updatedPlayers = players.map((p) => ({ ...p, isSelected: false }));
@@ -169,37 +115,6 @@ const index = () => {
     updateData();
   };
 
-  const batPriority = () => {
-    const updatedPlayers = players.map((p) => ({
-      ...p,
-      didntBat: p.isSelected ? true : p.didntBat, 
-    }));
-    setPlayers(updatedPlayers);
-
-    boostBat(); // will pick top 4 based on didntBat
-    ToastAndroid.show("Batsman added to Priority", ToastAndroid.SHORT);
-    updateData();
-    clearSelection();
-    setShowBatConfirm(false);
-  };
-
-  const bowlPriority = () => {
-    const updatedPlayers = players.map((p) => ({
-      ...p,
-      didntBowl: p.isSelected ? true : p.didntBowl, // only mark selected players
-    }));
-    setPlayers(updatedPlayers);
-
-    boostBowl(); // will pick top 4 based on didntBat
-    ToastAndroid.show("Bowler added to Priority", ToastAndroid.SHORT);
-    updateData();
-    clearSelection();
-    setShowBowlConfirm(false);
-  };
-
-  const predictData = () => {
-    predict();
-  };
 
   return (
     <>

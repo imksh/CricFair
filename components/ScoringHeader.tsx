@@ -87,6 +87,22 @@ export default function ScoringHeader({ screen, setScreen }) {
             Info
           </Mid>
         </TouchableOpacity>
+        <TouchableOpacity className="mx-2" onPress={() => setScreen("live")}>
+          <Mid
+            style={
+              screen === "live"
+                ? {
+                    color: colors.primary,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.primary,
+                    padding: 5,
+                  }
+                : { color: colors.text, padding: 5 }
+            }
+          >
+            Live
+          </Mid>
+        </TouchableOpacity>
       </View>
     </View>
   );

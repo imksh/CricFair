@@ -120,7 +120,10 @@ const AddPlayer = ({ onAdd, inputPlayer, setInputPlayer, setShowAdd }) => {
             style={{
               backgroundColor: colors.textMuted,
             }}
-            onPress={()=>setShowAdd(false)}
+            onPress={()=>{
+              setShowAdd(false);
+              setInputPlayer({ name: "", role: "Batsman" });
+            }}
           >
             <Mid style={{ color: "#fff" }}>Cancle</Mid>
           </TouchableOpacity>

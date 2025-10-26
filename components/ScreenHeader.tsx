@@ -11,7 +11,7 @@ export default function ScreenHeader({name}) {
   const router = useRouter();
   return (
     <View
-      className="pt-16 pl-4"
+      className="pt-16 pl-4 pb-4"
       style={{ backgroundColor: colors.bg, elevation: 2 }}
     >
       <View className="flex-row">

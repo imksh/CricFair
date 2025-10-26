@@ -7,6 +7,7 @@ import { Heading, Mid,Body } from "../../components/Typography";
 import MatchScorecard from '../../components/MatchScorecard';
 import MatchInfo from '../../components/MatchInfo';
 import { useRouter } from "expo-router";
+import Balls from '../../components/Balls';
 
 export default function MatchShow() {
   const { colors } = useThemeStore();
@@ -88,7 +89,7 @@ export default function MatchShow() {
       >
         {screen === "scorecard" && <MatchScorecard match={match} />}
         {screen === "info" && <MatchInfo match={match} />}
-        {/* {screen === "balls" && <Balls />} */}
+        {screen === "balls" && <Balls />}
       </ScrollView>
     </View>
   );

@@ -4,12 +4,14 @@ import { Heading, SubHeading, Mid } from "./Typography";
 import { LinearGradient } from "expo-linear-gradient";
 import useThemeStore from "../store/themeStore";
 import useLocalStore from "../store/localStore";
+import { getData, save } from '../utils/storage';
 
 export default function Predict({ predict, todayBatsman, todayBowler }) {
   const { undoPredict, date, setDate,updateData } = useLocalStore();
   const [show, setShow] = useState(false);
   const todayDate = new Date();
   const { colors } = useThemeStore();
+  const [isUpdated,setIsUpdated] = useState(false);
 
   useEffect(() => {
   const todayDateString = new Date().toISOString().split("T")[0]; 
@@ -21,6 +23,23 @@ export default function Predict({ predict, todayBatsman, todayBowler }) {
     setShow(true); 
   }
 }, []);
+
+  useEffect(() => {
+    const fetch = async() =>{
+      const predicted = await getData("predicted");
+      if(predicted !== null){
+        setIsUpdated(predicted);
+      }
+    }
+    fetch();
+  }, [])
+  
+
+  const handleUpdate = async() =>{
+    // await save("predicted",true);
+    // setIsUpdated(true);
+    setShow(false); 
+  }
   
 
   const undo = async () => {
@@ -73,17 +92,18 @@ export default function Predict({ predict, todayBatsman, todayBowler }) {
               </View>
             </View>
             <View className="flex-row justify-between w-[100%]">
-              {/* <TouchableOpacity
-                className="mx-auto py-3 px-8 mt-8 rounded-2xl"
-                style={{ backgroundColor: colors.primary }}
-                onPress={undo}
-              >
-                <Mid style={{ color: "#fff" }}>Update</Mid>
-              </TouchableOpacity> */}
               <TouchableOpacity
                 className="mx-auto py-3 px-8 mt-8 rounded-2xl"
-                style={{ backgroundColor: colors.primary }}
+                onPress={()=>handleUpdate()}
+                style={!isUpdated?{backgroundColor: colors.textMuted}:{ backgroundColor: colors.primary }}
+              >
+                <Mid style={{ color: "#fff" }}>Update</Mid>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="mx-auto py-3 px-8 mt-8 rounded-2xl"
+                style={!isUpdated?{backgroundColor: colors.textMuted}:{ backgroundColor: colors.primary }}
                 onPress={undo}
+                disabled={!isUpdated}
               >
                 <Mid style={{ color: "#fff" }}>Undo</Mid>
               </TouchableOpacity>

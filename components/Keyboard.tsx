@@ -35,6 +35,9 @@ export default function Keyboard() {
     setInning,
     totalWickets,
     persistMatch,
+    liveData,
+    setLiveData,
+    saveLiveMatchData,
   } = useScoreStore();
   const [show, setShow] = useState("");
   const [out, setOut] = useState("");
@@ -44,7 +47,6 @@ export default function Keyboard() {
   const [showStriker, setShowStriker] = useState(false);
   const team = inning === 1 ? team1 : team2;
   useEffect(() => {
-    
     if (
       isOverCompleted ||
       batsman1?.name === "" ||
@@ -71,8 +73,12 @@ export default function Keyboard() {
           isFour: whichRun === "four",
           isSix: whichRun === "six",
           isOut: whichRun === "out",
+          showLive: "",
+          inning:inning,
           bowler,
         };
+        setLiveData(data);
+        saveLiveMatchData();
         await api.post("/overlay/add-score", data);
       } catch (error) {
         console.log("Error in adding score to overlay: ", error);
@@ -134,7 +140,7 @@ export default function Keyboard() {
                 elevation: 8,
               }}
             >
-              <Heading className="mx-auto">Save Match</Heading>
+              <Heading className="mx-auto">Save Match Data</Heading>
               <TouchableOpacity
                 className="py-3 mt-4 mb-4 rounded-2xl px-4 items-center mx-auto"
                 style={{ backgroundColor: colors.primary }}
@@ -143,7 +149,7 @@ export default function Keyboard() {
                   router.back();
                 }}
               >
-                <Mid>Save Match</Mid>
+                <Mid style={{color:colors.primary}}>Save</Mid>
               </TouchableOpacity>
             </LinearGradient>
           </View>
@@ -188,12 +194,21 @@ export default function Keyboard() {
         className="py-12 px-6 flex-1 flex-row justify-around items-center flex-wrap"
         style={{ backgroundColor: colors.primary }}
       >
-        <TouchableOpacity>
+        <TouchableOpacity onPress={setInning}>
           <Mid
             className="text-center border-x border-y  py-3 mx-2 my-4 px-4"
             style={{ color: "#fff" }}
           >
             End Innings
+          </Mid>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={undo}>
+          <Mid
+            className="text-center border-x border-y  py-3 mx-2 my-4 px-4"
+            style={{ color: "#fff" }}
+          >
+            Undo
           </Mid>
         </TouchableOpacity>
 
@@ -302,7 +317,6 @@ export default function Keyboard() {
               addWicket("bowled", "striker", 0);
               setShow("");
               setWhichRun("out");
-              
             }}
           >
             <Mid
@@ -1301,12 +1315,21 @@ export default function Keyboard() {
         className="py-12 px-6 flex-1 flex-row justify-around items-center flex-wrap"
         style={{ backgroundColor: colors.primary }}
       >
-        <TouchableOpacity>
+        <TouchableOpacity onPress={setInning}>
           <Mid
             className="text-center border-x border-y  py-3 mx-2 my-4 px-4"
             style={{ color: "#fff" }}
           >
             End Innings
+          </Mid>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={undo}>
+          <Mid
+            className="text-center border-x border-y  py-3 mx-2 my-4 px-4"
+            style={{ color: "#fff" }}
+          >
+            Undo
           </Mid>
         </TouchableOpacity>
 
